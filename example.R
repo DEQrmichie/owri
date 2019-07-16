@@ -11,6 +11,8 @@ mdb_to_sqlite(owri.mdb = owri.mdb, owri.sqlite = owri.sqlite, overwrite=TRUE)
 unlink(owri.sqlite)
 
 huc8 <- c(17090001, 17090002, 17090003, 17090004, 17090005, 17090006, 17090007, 17090008, 17090010, 17090011, 17090012)
+huc8.names <- c("Middle Fork Willamette", "Coast Fork Willamette","Upper Willamette", "McKenzie", "North Santiam", "South Santiam",
+                "Middle Willamette", "Yamhill", "Clackamas", "Mollalla-Pudding", "Tualatin", "Lower Willamette")
 complete.years <- c(2006:2018)
 
 df.treats <- treatments(owri.db = owri.db, complete.years = complete.years, huc8 = huc8)
