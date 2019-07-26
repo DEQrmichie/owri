@@ -1,4 +1,13 @@
-
+#' Return treatments compleated for each project.
+#'
+#' @param owri.db The path and file name of the owri SQLite database.
+#' @param complete.years Vector of numeric years used to fetch projects. Only projects completed in these years will be summarized.
+#' @param huc8 Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized.
+#'
+#' @keywords owri, complete years, huc8,
+#' @export
+#' @return Dataframe with the quantity treatments implemented for each project.
+#'
 
 treatments <- function(owri.db, complete.years, huc8) {
 
@@ -6,6 +15,8 @@ treatments <- function(owri.db, complete.years, huc8) {
   library(RSQLite)
   library(dplyr)
   library(tidyr)
+
+  options(stringsAsFactors = FALSE)
 
   channel <- dbConnect(RSQLite::SQLite(), owri.db)
 
@@ -33,14 +44,6 @@ treatments <- function(owri.db, complete.years, huc8) {
                                                      "Percent watershed area affected",
                                                      "Volumetric flow rate"))
 
-  # Select only some of the riparian treatment metrics
-  RiparianVtrRcr2 <- RiparianVtrRcr %>%
-    dplyr::select(TreatmentID, mile=LengthMiles, acre=BestAcres, feet=WidthFeet) %>%
-    tidyr::gather(-TreatmentID, key="Unit",value="Quantity") %>%
-    mutate(UnitLUID=case_when(Unit == "mile" ~ 10,
-                              Unit == "acre" ~ 1,
-                              Unit == "feet" ~ 8))
-
   df.treatments <- Treatment %>%
     dplyr::select(PROJNUM ,ActivityTypeLUID, ActivityLUID, TreatmentLUID, TreatmentID) %>%
     dplyr::left_join(ActivityTypeLU[,c("ActivityTypeLUID", "ActivityType")], by="ActivityTypeLUID") %>%
@@ -50,8 +53,20 @@ treatments <- function(owri.db, complete.years, huc8) {
     dplyr::left_join(TreatmentMetricLU2, by="TreatmentMetricLUID") %>%
     dplyr::left_join(UnitLU, by="UnitLUID") %>%
     dplyr::left_join(ProjectInfo, by="PROJNUM") %>%
-    dplyr::filter(CompleteYear %in% complete.years & drvdHUC4thField %in% huc8)
+    dplyr::filter(CompleteYear %in% complete.years & drvdHUC4thField %in% huc8) #%>%
+    # dplyr::mutate(TreatmentMetric_Unit=dplyr::case_when(TreatmentMetricLUID == 1 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 2 ~ paste0("Number of ",Unit,"s"),
+                                                        # TreatmentMetricLUID == 3 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 4 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 5 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 6 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 7 ~ paste0(Unit,"s treated"),
+                                                        # TreatmentMetricLUID == 8 ~ paste0(Unit,"s treated"),
+                                                        # ))
 
   return(df.treatments)
 
 }
+
+
+
