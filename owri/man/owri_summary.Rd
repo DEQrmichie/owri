@@ -2,22 +2,22 @@
 % Please edit documentation in R/owri_summary.R
 \name{owri_summary}
 \alias{owri_summary}
-\title{Summarize OWRI activity and treatments.}
+\title{Summarize OWRI  treatments.}
 \usage{
 owri_summary(owri.db, complete.years, huc8)
 }
 \arguments{
 \item{owri.db}{The path and file name of the owri SQLite database.}
 
-\item{complete.years}{Vector of numeric years used to fetch projects. Only projects completed in these years will be summarized.}
+\item{complete.years}{Vector of numeric years used to fetch projects. The year range must span 20 years. Only projects completed in these years will be summarized.}
 
 \item{huc8}{Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized.}
 }
 \value{
-Dataframe with the quantity of activity and treatments implemented.
+Dataframe with the quantity of treatments implemented.
 }
 \description{
-Summarize OWRI activity and treatments.
+Summarize OWRI  treatments.
 }
 \keyword{complete}
 \keyword{huc8,}
