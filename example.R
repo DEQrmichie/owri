@@ -11,6 +11,8 @@ mdb_to_sqlite(owri.mdb = owri.mdb, owri.sqlite = owri.sqlite, overwrite=TRUE)
 
 # summarize treatments
 
+library(owri)
+
 owri.db <- "OwriDbExport_122618.db"
 
 huc8 <- c(17090001, 17090002, 17090003, 17090004, 17090005, 17090006, 17090007, 17090008, 17090010, 17090011, 17090012)
