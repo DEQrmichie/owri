@@ -6,7 +6,7 @@
 #'
 #' @keywords owri, complete years, huc8,
 #' @export
-#' @return Dataframe with the quantity of treatments implemented.
+#' @return Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
 #'
 
 owri_summary <- function(owri.db, complete.years, huc8) {
@@ -77,7 +77,7 @@ owri_summary <- function(owri.db, complete.years, huc8) {
     dplyr::left_join(UnitLU, by="UnitLUID") %>%
     dplyr::left_join(ProjectInfo, by="PROJNUM") %>%
     dplyr::select(ActivityTypeLUID, ActivityType, ActivityLUID, Activity, TreatmentLUID, Treatment,
-                   TreatmentMetricLUID, UnitLUID, Unit) %>%
+                  TreatmentMetricLUID, UnitLUID, Unit) %>%
     dplyr::distinct() %>%
     dplyr::left_join(ATATLU, by=c("ActivityTypeLUID","ActivityType","ActivityLUID","Activity","TreatmentLUID","Treatment")) %>%
     dplyr::filter(active == "Y") %>%
@@ -99,7 +99,7 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                     (ActivityType =="Road" & Activity %in% c("Peak flow passage improvement",
                                                              "Surface drainage improvement",
                                                              "Road stabilization",
-                                                             "Road decommission" ) & TreatmentMetricLUID %in% c(2)) |
+                                                             "Road decommission" ) & TreatmentMetricLUID %in% c(2,5)) |
                     (ActivityType =="Upland" & Activity %in% c("Grazing management",
                                                                "Nutrient/manure management",
                                                                "Off-channel livestock or wildlife watering",
@@ -115,17 +115,22 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                                                                "Upland tree planting",
                                                                "Upland vegetation management",
                                                                "Upland vegetation planting",
-                                                               "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2))
+                                                               "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2)) |
+                    (ActivityType =="Urban" & TreatmentMetricLUID %in% c(1, 2))
     ) %>%
+    dplyr::mutate(UnitLUID=ifelse(Unit=="station", as.integer(10), UnitLUID), # change station to miles (1 station = 100 feet = 0.0189394 miles)
+                  Unit=ifelse(Unit=="station", "mile", Unit), # change feet to miles
+                  UnitLUID=ifelse(Unit=="feet", as.integer(10), UnitLUID),
+                  Unit=ifelse(Unit=="feet", "mile", Unit)) %>%
     dplyr::mutate(TreatmentMetric=case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
-                                     TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
-                                     TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
-                                     TreatmentMetricLUID==4 ~ Unit,
-                                     TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
-                                     TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
-                                     TreatmentMetricLUID==5 & Unit=="feet" ~ paste0(Unit," of treatment"),
-                                     TreatmentMetricLUID==8 ~ Unit),
-           Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
+                                            TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
+                                            TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
+                                            TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
+                                            TreatmentMetricLUID==4 ~ Unit,
+                                            TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
+                                            TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
+                                            TreatmentMetricLUID==8 ~ Unit)) %>%
+    dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
     dplyr::select(ActivityType, Activity, Treatment, TreatmentMetric, Treatment_Unit, DisplayOrder) %>%
     dplyr::distinct() %>%
     dplyr::arrange(DisplayOrder) %>%
@@ -133,7 +138,9 @@ owri_summary <- function(owri.db, complete.years, huc8) {
 
   # table to join to include all combinations
   Treatment_Unit_join <- Treatment_Unit_LU %>%
-    tidyr::expand(nesting(ActivityType, Treatment_Unit), SubbasinActual=unique(df.treatments$SubbasinActual))
+    tidyr::expand(nesting(ActivityType, Treatment_Unit),
+                  nesting(drvdHUC4thField=unique(df.treatments$drvdHUC4thField),
+                  SubbasinActual=unique(df.treatments$SubbasinActual)))
 
   #-- Year Groups --------------
 
@@ -183,7 +190,7 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                     (ActivityType =="Road" & Activity %in% c("Peak flow passage improvement",
                                                              "Surface drainage improvement",
                                                              "Road stabilization",
-                                                             "Road decommission" ) & TreatmentMetricLUID %in% c(2)) |
+                                                             "Road decommission" ) & TreatmentMetricLUID %in% c(2,5)) |
                     (ActivityType =="Upland" & Activity %in% c("Grazing management",
                                                                "Nutrient/manure management",
                                                                "Off-channel livestock or wildlife watering",
@@ -199,29 +206,36 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                                                                "Upland tree planting",
                                                                "Upland vegetation management",
                                                                "Upland vegetation planting",
-                                                               "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2))
+                                                               "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2)) |
+                    (ActivityType =="Urban" & TreatmentMetricLUID %in% c(1, 2))
     ) %>%
     rbind(tbl.rip1) %>%
+    dplyr::mutate(Quantity=ifelse(Unit=="station", Quantity*0.0189394, Quantity), # convert station to miles (1 station = 100 feet = 0.0189394 miles)
+                  UnitLUID=ifelse(Unit=="station", as.integer(10), UnitLUID),
+                  Unit=ifelse(Unit=="station", "mile", Unit),
+                  Quantity=ifelse(Unit=="feet", Quantity*0.000189394, Quantity), # convert feet to miles
+                  UnitLUID=ifelse(Unit=="feet", as.integer(10), UnitLUID),
+                  Unit=ifelse(Unit=="feet", "mile", Unit)) %>%
     dplyr::mutate(TreatmentMetric=case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
                                             TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
+                                            TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
                                             TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
                                             TreatmentMetricLUID==4 ~ Unit,
                                             TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
                                             TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
-                                            TreatmentMetricLUID==5 & Unit=="feet" ~ paste0(Unit," of treatment"),
-                                            TreatmentMetricLUID==8 ~ Unit),
-                  Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
-    dplyr::group_by(ActivityType, SubbasinActual, year_group, Treatment_Unit, DisplayOrder) %>%
-    dplyr::summarise(Quantity=sum(Quantity, na.rm = TRUE)) %>%
+                                            TreatmentMetricLUID==8 ~ Unit)) %>%
+    dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
+    dplyr::group_by(drvdHUC4thField, SubbasinActual, ActivityType, year_group, Treatment_Unit, DisplayOrder) %>%
+    dplyr::summarise(Quantity=round(sum(Quantity, na.rm = TRUE),2)) %>%
     tidyr::spread(year_group, Quantity) %>%
-    dplyr::right_join(Treatment_Unit_join, by = c("ActivityType", "Treatment_Unit", "SubbasinActual")) %>%
+    dplyr::right_join(Treatment_Unit_join, by = c("ActivityType", "Treatment_Unit", "drvdHUC4thField", "SubbasinActual")) %>%
     replace(.,is.na(.), 0) %>%
-    dplyr::arrange(SubbasinActual, DisplayOrder) %>%
-    dplyr::rename(Subbasin=SubbasinActual,
-                  'Treatment (Units)'=Treatment_Unit) %>%
+    dplyr::rename(HUC8=drvdHUC4thField,
+                  HUC8_Name=SubbasinActual) %>%
+    dplyr::arrange(HUC8, DisplayOrder) %>%
     dplyr::select(-DisplayOrder)
 
-  tbl.final$Total <- rowSums(tbl.final[,c(4:8)], na.rm=TRUE)
+  tbl.final$Total <- rowSums(tbl.final[,c(5:9)], na.rm=TRUE)
 
   return(tbl.final)
 }
