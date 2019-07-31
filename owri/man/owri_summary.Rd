@@ -14,7 +14,7 @@ owri_summary(owri.db, complete.years, huc8)
 \item{huc8}{Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized.}
 }
 \value{
-Dataframe with the quantity of treatments implemented.
+Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
 }
 \description{
 Summarize OWRI  treatments.
