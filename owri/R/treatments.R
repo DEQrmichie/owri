@@ -21,7 +21,6 @@ treatments <- function(owri.db, complete.years, huc8) {
   channel <- dbConnect(RSQLite::SQLite(), owri.db)
 
   # I'm keeping the dataframes the same name that OWEB uses
-  ActivityCost <- dbReadTable(channel, "ActivityCost")
   ActivityLU <- dbReadTable(channel, "ActivityLU")
   ActivityTypeLU <- dbReadTable(channel, "ActivityTypeLU")
   ProjectInfo <- dbReadTable(channel, "ProjectInfo")
