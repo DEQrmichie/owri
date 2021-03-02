@@ -1,2 +1,6 @@
 ^owri\.Rproj$
 ^\.Rproj\.user$
+^.*\\.xlsx$
+^.*\\.Rmd$
+^.*\\.db$
+example.R
