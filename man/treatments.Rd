@@ -2,7 +2,7 @@
 % Please edit documentation in R/treatments.R
 \name{treatments}
 \alias{treatments}
-\title{Return treatments compleated for each project.}
+\title{Return treatments completed for each project.}
 \usage{
 treatments(owri.db, complete.years, huc8)
 }
@@ -17,9 +17,9 @@ treatments(owri.db, complete.years, huc8)
 Dataframe with the quantity treatments implemented for each project.
 }
 \description{
-Return treatments compleated for each project.
+Return treatments completed for each project.
 }
 \keyword{complete}
-\keyword{huc8,}
+\keyword{huc8}
 \keyword{owri,}
 \keyword{years,}

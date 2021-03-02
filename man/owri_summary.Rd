@@ -2,7 +2,7 @@
 % Please edit documentation in R/owri_summary.R
 \name{owri_summary}
 \alias{owri_summary}
-\title{Summarize OWRI  treatments.}
+\title{Summarize OWRI treatments.}
 \usage{
 owri_summary(owri.db, complete.years, huc8)
 }
@@ -17,7 +17,7 @@ owri_summary(owri.db, complete.years, huc8)
 Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
 }
 \description{
-Summarize OWRI  treatments.
+Summarize OWRI treatments.
 }
 \keyword{complete}
 \keyword{huc8,}

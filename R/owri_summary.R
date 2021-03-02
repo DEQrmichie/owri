@@ -1,4 +1,4 @@
-#' Summarize OWRI  treatments.
+#' Summarize OWRI treatments.
 #'
 #' @param owri.db The path and file name of the owri SQLite database.
 #' @param complete.years Vector of numeric years used to fetch projects. The year range must span 20 years. Only projects completed in these years will be summarized.
@@ -11,28 +11,23 @@
 
 owri_summary <- function(owri.db, complete.years, huc8) {
 
-  library(DBI)
-  library(RSQLite)
-  library(dplyr)
-  library(tidyr)
-
   options(stringsAsFactors = FALSE)
 
-  channel <- dbConnect(RSQLite::SQLite(), owri.db)
+  channel <- DBI::dbConnect(RSQLite::SQLite(), owri.db)
 
   # I'm keeping the dataframes the same name that OWEB uses
-  ActivityCost <- dbReadTable(channel, "ActivityCost")
-  ActivityLU <- dbReadTable(channel, "ActivityLU")
-  ActivityTypeLU <- dbReadTable(channel, "ActivityTypeLU")
-  ATATLU <- dbReadTable(channel, "ActivityTypeLUXActivityLUXTreatmentLU")
-  ProjectInfo <- dbReadTable(channel, "ProjectInfo")
-  Treatment <- dbReadTable(channel, "Treatment")
-  TreatmentLU <- dbReadTable(channel, "TreatmentLU")
-  TreatmentMetric <- dbReadTable(channel, "TreatmentMetric")
-  TreatmentMetricLU <- dbReadTable(channel, "TreatmentMetricLU")
-  UnitLU <- dbReadTable(channel, "UnitLU")
-  RiparianVtrRcr <- dbReadTable(channel, "RiparianVtrRcr")
-  dbDisconnect(channel)
+  ActivityCost <- DBI::dbReadTable(channel, "ActivityCost")
+  ActivityLU <- DBI::dbReadTable(channel, "ActivityLU")
+  ActivityTypeLU <- DBI::dbReadTable(channel, "ActivityTypeLU")
+  ATATLU <- DBI::dbReadTable(channel, "ActivityTypeLUXActivityLUXTreatmentLU")
+  ProjectInfo <- DBI::dbReadTable(channel, "ProjectInfo")
+  Treatment <- DBI::dbReadTable(channel, "Treatment")
+  TreatmentLU <- DBI::dbReadTable(channel, "TreatmentLU")
+  TreatmentMetric <- DBI::dbReadTable(channel, "TreatmentMetric")
+  TreatmentMetricLU <- DBI::dbReadTable(channel, "TreatmentMetricLU")
+  UnitLU <- DBI::dbReadTable(channel, "UnitLU")
+  RiparianVtrRcr <- DBI::dbReadTable(channel, "RiparianVtrRcr")
+  DBI::dbDisconnect(channel)
 
   # Rename some of the Treatment Metrics
   TreatmentMetricLU2 <- data.frame(TreatmentMetricLUID=c(1:8),
@@ -49,12 +44,12 @@ owri_summary <- function(owri.db, complete.years, huc8) {
   RiparianVtrRcr2 <- RiparianVtrRcr %>%
     dplyr::select(TreatmentID, mile=LengthMiles, acre=BestAcres, feet=WidthFeet) %>%
     tidyr::gather(-TreatmentID, key="Unit",value="Quantity") %>%
-    mutate(UnitLUID=case_when(Unit == "mile" ~ 10,
-                              Unit == "acre" ~ 1,
-                              Unit == "feet" ~ 8),
-           TreatmentMetricLUID=case_when(Unit == "mile" ~ 5,
-                                         Unit == "acre" ~ 1,
-                                         Unit == "feet" ~ 5))
+    dplyr::mutate(UnitLUID=dplyr::case_when(Unit == "mile" ~ 10,
+                                     Unit == "acre" ~ 1,
+                                     Unit == "feet" ~ 8),
+                  TreatmentMetricLUID=dplyr::case_when(Unit == "mile" ~ 5,
+                                                       Unit == "acre" ~ 1,
+                                                       Unit == "feet" ~ 5))
 
   df.treatments <- Treatment %>%
     dplyr::select(PROJNUM ,ActivityTypeLUID, ActivityLUID, TreatmentLUID, TreatmentID) %>%
@@ -122,25 +117,25 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                   Unit=ifelse(Unit=="station", "mile", Unit), # change feet to miles
                   UnitLUID=ifelse(Unit=="feet", as.integer(10), UnitLUID),
                   Unit=ifelse(Unit=="feet", "mile", Unit)) %>%
-    dplyr::mutate(TreatmentMetric=case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
-                                            TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
-                                            TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
-                                            TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
-                                            TreatmentMetricLUID==4 ~ Unit,
-                                            TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
-                                            TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
-                                            TreatmentMetricLUID==8 ~ Unit)) %>%
+    dplyr::mutate(TreatmentMetric=dplyr::case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
+                                                   TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
+                                                   TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
+                                                   TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
+                                                   TreatmentMetricLUID==4 ~ Unit,
+                                                   TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
+                                                   TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
+                                                   TreatmentMetricLUID==8 ~ Unit)) %>%
     dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
     dplyr::select(ActivityType, Activity, Treatment, TreatmentMetric, Treatment_Unit, DisplayOrder) %>%
     dplyr::distinct() %>%
     dplyr::arrange(DisplayOrder) %>%
-    dplyr::mutate(Treatment_UnitLUID=row_number())
+    dplyr::mutate(Treatment_UnitLUID=dplyr::row_number())
 
   # table to join to include all combinations
   Treatment_Unit_join <- Treatment_Unit_LU %>%
-    tidyr::expand(nesting(ActivityType, Treatment_Unit),
-                  nesting(drvdHUC4thField=unique(df.treatments$drvdHUC4thField),
-                  SubbasinActual=unique(df.treatments$SubbasinActual)))
+    tidyr::expand(tidyr::nesting(ActivityType, Treatment_Unit),
+                  tidyr::nesting(drvdHUC4thField=unique(df.treatments$drvdHUC4thField),
+                                 SubbasinActual=unique(df.treatments$SubbasinActual)))
 
   #-- Year Groups --------------
 
@@ -216,14 +211,14 @@ owri_summary <- function(owri.db, complete.years, huc8) {
                   Quantity=ifelse(Unit=="feet", Quantity*0.000189394, Quantity), # convert feet to miles
                   UnitLUID=ifelse(Unit=="feet", as.integer(10), UnitLUID),
                   Unit=ifelse(Unit=="feet", "mile", Unit)) %>%
-    dplyr::mutate(TreatmentMetric=case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
-                                            TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
-                                            TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
-                                            TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
-                                            TreatmentMetricLUID==4 ~ Unit,
-                                            TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
-                                            TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
-                                            TreatmentMetricLUID==8 ~ Unit)) %>%
+    dplyr::mutate(TreatmentMetric=dplyr::case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
+                                                   TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
+                                                   TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
+                                                   TreatmentMetricLUID==2 ~ paste0("Number of ",Unit,"s"),
+                                                   TreatmentMetricLUID==4 ~ Unit,
+                                                   TreatmentMetricLUID==5 & Unit=="structure"~ paste0("Number of ",Unit,"s"),
+                                                   TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
+                                                   TreatmentMetricLUID==8 ~ Unit)) %>%
     dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
     dplyr::group_by(drvdHUC4thField, SubbasinActual, ActivityType, year_group, Treatment_Unit, DisplayOrder) %>%
     dplyr::summarise(Quantity=round(sum(Quantity, na.rm = TRUE),2)) %>%
