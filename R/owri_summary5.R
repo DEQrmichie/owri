@@ -1,15 +1,15 @@
 #' Summarize OWRI treatments.
 #'
 #' @param owri.db The path and file name of the owri SQLite database.
-#' @param complete.years Vector of numeric years used to fetch projects. Only projects completed in these years will be summarized. Default is NA resulting in summary of all years in the database.
-#' @param huc8 Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized. Default is NA resulting in summary of all HUC8 codes in the database.
+#' @param complete.years Vector of numeric years used to fetch projects. The year range must span 20 years. Only projects completed in these years will be summarized.
+#' @param huc8 Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized.
 #'
 #' @keywords owri, complete years, huc8,
 #' @export
 #' @return Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
 #'
 
-owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
+owri_summary <- function(owri.db, complete.years, huc8) {
 
   options(stringsAsFactors = FALSE)
 
@@ -58,25 +58,12 @@ owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
     dplyr::left_join(TreatmentLU[,c("TreatmentLUID", "Treatment")], by="TreatmentLUID") %>%
     dplyr::left_join(TreatmentMetric, by="TreatmentID") %>%
     dplyr::left_join(UnitLU, by="UnitLUID") %>%
-    dplyr::left_join(ProjectInfo, by="PROJNUM")
-
-if(is.na(complete.years)) {
-  # vector of all years between min and max
-  complete.years <- c(min(df.treatments$CompleteYear):max(df.treatments$CompleteYear))
-}
-
-
-if(is.na(huc8)) {
-  # vector of all huc 8 codes in database
-  huc8 <- unique(df.treatments$drvdHUC4thField)
-}
-
-df.treatments %>% df.treatments %>%
+    dplyr::left_join(ProjectInfo, by="PROJNUM") %>%
     dplyr::filter(CompleteYear %in% complete.years & drvdHUC4thField %in% huc8)
 
   #-- Treatment Unit LU table --------------
 
-  Treatment_Unit_LU1 <- Treatment %>%
+  Treatment_Unit_LU <- Treatment %>%
     dplyr::select(PROJNUM ,ActivityTypeLUID, ActivityLUID, TreatmentLUID, TreatmentID) %>%
     dplyr::left_join(ActivityTypeLU[,c("ActivityTypeLUID", "ActivityType")], by="ActivityTypeLUID") %>%
     dplyr::left_join(ActivityLU[,c("ActivityLUID", "Activity")], by="ActivityLUID") %>%
@@ -89,10 +76,7 @@ df.treatments %>% df.treatments %>%
     dplyr::distinct() %>%
     dplyr::left_join(ATATLU, by=c("ActivityTypeLUID","ActivityType","ActivityLUID","Activity","TreatmentLUID","Treatment")) %>%
     dplyr::filter(active == "Y") %>%
-    dplyr::arrange(DisplayOrder)
-
-    # Filter to only selected treatments
-  Treatment_Unit_LU2 <- Treatment_Unit_LU1 %>%
+    dplyr::arrange(DisplayOrder) %>%
     dplyr::filter((ActivityType =="Estuary" & Unit == "acre") |
                     (ActivityType =="Fish Passage" & TreatmentMetricLUID==2) & !(Treatment == "Other treatment") |
                     (ActivityType =="Fish Screening" & TreatmentMetricLUID==2) |
@@ -127,16 +111,12 @@ df.treatments %>% df.treatments %>%
                                                                "Upland vegetation management",
                                                                "Upland vegetation planting",
                                                                "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2)) |
-                    (ActivityType =="Urban" & TreatmentMetricLUID %in% c(1, 2)))
-
-  # Reset some units to get everything consistent
-  Treatment_Unit_LU3 <- Treatment_Unit_LU2 %>%
+                    (ActivityType =="Urban" & TreatmentMetricLUID %in% c(1, 2))
+    ) %>%
     dplyr::mutate(UnitLUID=ifelse(Unit=="station", as.integer(10), UnitLUID), # change station to miles (1 station = 100 feet = 0.0189394 miles)
                   Unit=ifelse(Unit=="station", "mile", Unit), # change feet to miles
                   UnitLUID=ifelse(Unit=="feet", as.integer(10), UnitLUID),
-                  Unit=ifelse(Unit=="feet", "mile", Unit))
-
-  Treatment_Unit_LU4 <- Treatment_Unit_LU3 %>%
+                  Unit=ifelse(Unit=="feet", "mile", Unit)) %>%
     dplyr::mutate(TreatmentMetric=dplyr::case_when(TreatmentMetricLUID==1 ~ paste0(Unit,"s treated"),
                                                    TreatmentMetricLUID==2 & Unit=="pound" ~ paste0(Unit,"s"),
                                                    TreatmentMetricLUID==2 & Unit=="each"~ paste0("Number of treatments"),
@@ -146,23 +126,34 @@ df.treatments %>% df.treatments %>%
                                                    TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
                                                    TreatmentMetricLUID==8 ~ Unit)) %>%
     dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
-    dplyr::select(ActivityType, Activity, Treatment, Unit, TreatmentMetric, Treatment_Unit, DisplayOrder) %>%
+    dplyr::select(ActivityType, Activity, Treatment, TreatmentMetric, Treatment_Unit, DisplayOrder) %>%
     dplyr::distinct() %>%
     dplyr::arrange(DisplayOrder) %>%
     dplyr::mutate(Treatment_UnitLUID=dplyr::row_number())
 
   # table to join to include all combinations
-  Treatment_Unit_join <- Treatment_Unit_LU4 %>%
-    tidyr::expand(tidyr::nesting(ActivityType, Treatment, Unit, TreatmentMetric, Treatment_Unit))
+  Treatment_Unit_join <- Treatment_Unit_LU %>%
+    tidyr::expand(tidyr::nesting(ActivityType, Treatment_Unit),
+                  tidyr::nesting(drvdHUC4thField=unique(df.treatments$drvdHUC4thField),
+                                 SubbasinActual=unique(df.treatments$SubbasinActual)))
 
-  #-- Year Columns --------------
+  #-- Year Groups --------------
 
+  year_group1 <- paste0(complete.years[1],"-",complete.years[4])
+  year_group2 <- paste0(complete.years[5],"-",complete.years[8])
+  year_group3 <- paste0(complete.years[9],"-",complete.years[12])
+  year_group4 <- paste0(complete.years[13],"-",complete.years[16])
+  year_group5 <- paste0(complete.years[17],"-",complete.years[20])
+
+  # generate year groups
   df.treatments <- df.treatments %>%
-    dplyr::mutate(year=dplyr::case_when(CompleteYear %in% c(complete.years) ~ paste0("Y", CompleteYear),
-                                              TRUE ~ as.character(NA)))
-
-  sum_cols <- sort(unique(df.treatments$year))
-
+    dplyr::mutate(year_group=dplyr::case_when(CompleteYear %in% c(complete.years[1:4]) ~ year_group1,
+                                              CompleteYear %in% c(complete.years[5:8]) ~ year_group2,
+                                              CompleteYear %in% c(complete.years[9:12]) ~ year_group3,
+                                              CompleteYear %in% c(complete.years[13:16]) ~ year_group4,
+                                              CompleteYear %in% c(complete.years[17:20]) ~ year_group5,
+                                              TRUE ~ as.character(NA)),
+                  year_group=factor(year_group, levels = c(year_group1,year_group2,year_group3,year_group4,year_group5)))
 
   #-- Treatment Summary -----
 
@@ -229,17 +220,17 @@ df.treatments %>% df.treatments %>%
                                                    TreatmentMetricLUID==5 & Unit=="mile"~ paste0(Unit,"s of treatment"),
                                                    TreatmentMetricLUID==8 ~ Unit)) %>%
     dplyr::mutate(Treatment_Unit=paste0(Treatment," (",TreatmentMetric,")")) %>%
-    dplyr::group_by(ActivityType, year, Treatment, Unit, TreatmentMetric, Treatment_Unit, DisplayOrder) %>%
+    dplyr::group_by(drvdHUC4thField, SubbasinActual, ActivityType, year_group, Treatment_Unit, DisplayOrder) %>%
     dplyr::summarise(Quantity=round(sum(Quantity, na.rm = TRUE),2)) %>%
-    tidyr::spread(year, Quantity) %>%
-    dplyr::right_join(Treatment_Unit_join) %>%
-    dplyr::arrange(DisplayOrder) %>%
+    tidyr::spread(year_group, Quantity) %>%
+    dplyr::right_join(Treatment_Unit_join, by = c("ActivityType", "Treatment_Unit", "drvdHUC4thField", "SubbasinActual")) %>%
+    replace(.,is.na(.), 0) %>%
+    dplyr::rename(HUC8=drvdHUC4thField,
+                  HUC8_Name=SubbasinActual) %>%
+    dplyr::arrange(HUC8, DisplayOrder) %>%
     dplyr::select(-DisplayOrder)
 
-  # replace NA with zero
-  tbl.final[sum_cols][is.na(tbl.final[sum_cols])] <- 0
-
-  tbl.final$Total <- rowSums(tbl.final[, sum_cols], na.rm=TRUE)
+  tbl.final$Total <- rowSums(tbl.final[,c(5:9)], na.rm=TRUE)
 
   return(tbl.final)
 }
