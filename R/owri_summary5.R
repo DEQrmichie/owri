@@ -139,21 +139,19 @@ owri_summary <- function(owri.db, complete.years, huc8) {
 
   #-- Year Groups --------------
 
-  year_group1 <- paste0(complete.years[1],"-",complete.years[4])
-  year_group2 <- paste0(complete.years[5],"-",complete.years[8])
-  year_group3 <- paste0(complete.years[9],"-",complete.years[12])
-  year_group4 <- paste0(complete.years[13],"-",complete.years[16])
-  year_group5 <- paste0(complete.years[17],"-",complete.years[20])
+  year_group1 <- paste0(complete.years[1],"-",complete.years[5])
+  year_group2 <- paste0(complete.years[6],"-",complete.years[10])
+  year_group3 <- paste0(complete.years[11],"-",complete.years[15])
+  year_group4 <- paste0(complete.years[16],"-",complete.years[20])
 
   # generate year groups
   df.treatments <- df.treatments %>%
-    dplyr::mutate(year_group=dplyr::case_when(CompleteYear %in% c(complete.years[1:4]) ~ year_group1,
-                                              CompleteYear %in% c(complete.years[5:8]) ~ year_group2,
-                                              CompleteYear %in% c(complete.years[9:12]) ~ year_group3,
-                                              CompleteYear %in% c(complete.years[13:16]) ~ year_group4,
-                                              CompleteYear %in% c(complete.years[17:20]) ~ year_group5,
+    dplyr::mutate(year_group=dplyr::case_when(CompleteYear %in% c(complete.years[1:5]) ~ year_group1,
+                                              CompleteYear %in% c(complete.years[6:10]) ~ year_group2,
+                                              CompleteYear %in% c(complete.years[11:15]) ~ year_group3,
+                                              CompleteYear %in% c(complete.years[16:20]) ~ year_group4,
                                               TRUE ~ as.character(NA)),
-                  year_group=factor(year_group, levels = c(year_group1,year_group2,year_group3,year_group4,year_group5)))
+                  year_group=factor(year_group, levels = c(year_group1,year_group2,year_group3,year_group4)))
 
   #-- Treatment Summary -----
 
