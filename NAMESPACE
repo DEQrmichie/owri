@@ -2,4 +2,5 @@
 
 export(mdb_to_sqlite)
 export(owri_summary)
+export(owri_summary5)
 export(treatments)
