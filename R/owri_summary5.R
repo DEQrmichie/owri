@@ -228,7 +228,7 @@ owri_summary <- function(owri.db, complete.years, huc8) {
     dplyr::arrange(HUC8, DisplayOrder) %>%
     dplyr::select(-DisplayOrder)
 
-  tbl.final$Total <- rowSums(tbl.final[,c(5:9)], na.rm=TRUE)
+  tbl.final$Total <- rowSums(tbl.final[,c(5:8)], na.rm=TRUE)
 
   return(tbl.final)
 }
