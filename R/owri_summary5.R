@@ -9,7 +9,7 @@
 #' @return Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
 #'
 
-owri_summary <- function(owri.db, complete.years, huc8) {
+owri_summary5 <- function(owri.db, complete.years, huc8) {
 
   options(stringsAsFactors = FALSE)
 
