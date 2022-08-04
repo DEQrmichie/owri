@@ -1,12 +1,25 @@
 Package: owri
 Title: Query and summarize project data from the OWRI database
-Version: 0.2.2
+Version: 0.2.3
 Authors@R: c(
     person(given = "Ryan",
            family = "Michie",
            role = c("aut", "cre"),
-           email = "ryan.michie@deq.state.or.us"))
-Description: owri is a package to simplfy query and summarization of project data in the Oregon Watershed Restoration Inventory (OWRI) database. The OWRI database is managed by the Oregon Watershed Enhancement Board and originated with the Oregon Plan for Salmon and Watersheds. The majority of OWRI entries represent voluntary actions of private citizens and landowners who have worked in partnership with federal, state, and local groups to improve aquatic habitat and water quality conditions. OWRI is the single largest restoration information database in the Western United States with more than 17,000 completed projects reported since 1995.
+           email = "ryan.michie@deq.oregon.gov"))
+Description: owri is a R package to simplfy access, query, and summarization of 
+             project data from the Oregon Watershed Restoration Inventory (OWRI) 
+             database. The OWRI database is managed by the Oregon 
+             Watershed Enhancement Board (OWEB) and originated with the Oregon Plan for Salmon and Watersheds. 
+             The majority of OWRI entries represent voluntary actions of private 
+             citizens and landowners who have worked in partnership with federal, 
+             state, and local groups to improve aquatic habitat and water quality 
+             conditions. OWRI is the single largest restoration information database 
+             in the Western United States with more than 17,000 completed projects 
+             reported since 1995. The database included in this pacakge was sourced from the publically availiable
+             OWRI database downloads provided by OWEB. The database was converted
+             from Microsoft Access format to a SQLite database. All data and tables
+             have been included and are exactly the same.
+URL: https://www.oregon.gov/oweb/data-reporting/Pages/owri.aspx/, https://oregonexplorer.info/content/oregon-watershed-restoration-inventory-owri
 Imports:
     dplyr (>= 1.0.0),
     DBI (>= 1.0.0),
