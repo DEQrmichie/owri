@@ -1,4 +1,6 @@
-#' Summarize OWRI treatments.
+#' Summarize OWRI treatments over 20 years.
+#'
+#' This function is primarily used for DEQ's Water Quality Status and Trends Report.
 #'
 #' @param owri.db The path and file name of the owri SQLite database.
 #' @param complete.years Vector of numeric years used to fetch projects. The year range must span 20 years. Only projects completed in these years will be summarized.
@@ -6,10 +8,14 @@
 #'
 #' @keywords owri, complete years, huc8,
 #' @export
-#' @return Dataframe with the sum of treatments implemented grouped into five yearly periods by huc8 and activity type.
+#' @return Dataframe with the sum of treatments implemented grouped into four yearly periods by huc8 and activity type.
 #'
 
-owri_summary5 <- function(owri.db, complete.years, huc8) {
+owri_summary20 <- function(owri.db, complete.years, huc8) {
+
+  if (!length(complete.years) == 20 ) {
+    stop("The range of complete.years must span 20 years.")
+  }
 
   options(stringsAsFactors = FALSE)
 
