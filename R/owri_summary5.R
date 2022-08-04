@@ -131,11 +131,18 @@ owri_summary5 <- function(owri.db, complete.years, huc8) {
     dplyr::arrange(DisplayOrder) %>%
     dplyr::mutate(Treatment_UnitLUID=dplyr::row_number())
 
+  HUC_nesting <- df.treatments %>%
+    dplyr::select(drvdHUC4thField, SubbasinActual) %>%
+    dplyr::mutate(HUC8_Name = paste0(df.treatments$drvdHUC4thField,"_",df.treatments$SubbasinActual)) %>%
+    dplyr::distinct(HUC8_Name) %>%
+    tidyr::separate(col = HUC8_Name, into = c("drvdHUC4thField", "SubbasinActual"), sep = "_") %>%
+    dplyr::mutate(drvdHUC4thField =  as.integer(drvdHUC4thField))
+
   # table to join to include all combinations
   Treatment_Unit_join <- Treatment_Unit_LU %>%
     tidyr::expand(tidyr::nesting(ActivityType, Treatment_Unit),
-                  tidyr::nesting(drvdHUC4thField=unique(df.treatments$drvdHUC4thField),
-                                 SubbasinActual=unique(df.treatments$SubbasinActual)))
+                  tidyr::nesting(drvdHUC4thField = HUC_nesting$drvdHUC4thField,
+                                 SubbasinActual = HUC_nesting$SubbasinActual))
 
   #-- Year Groups --------------
 

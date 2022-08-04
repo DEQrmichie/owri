@@ -71,7 +71,7 @@ if(is.na(huc8)) {
   huc8 <- unique(df.treatments$drvdHUC4thField)
 }
 
-df.treatments %>% df.treatments %>%
+df.treatments <- df.treatments %>%
     dplyr::filter(CompleteYear %in% complete.years & drvdHUC4thField %in% huc8)
 
   #-- Treatment Unit LU table --------------
