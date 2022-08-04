@@ -37,5 +37,4 @@ vignettes/*.pdf
 .Rproj.user
 
 *.xlsx
-*.db
 
