@@ -6,6 +6,12 @@
 #' This function is to be used to create new tables in a SQlite database rather
 #' than append or overwrite them.
 #'
+#' This function must be utilized with the 32 bit version of R. If using RStudio
+#' and converting a *.mdb Microsoft Access database only the 32 bit compatible
+#' version of RStudio Desktop can be used (<= version 1.1.463).
+#' Alternatively if the *.mdb file can be opened with Access and saved as a *.accdb
+#' file, newer versions of RStudio Desktop can be used instead.
+#'
 #' Microsoft Access 1997 or newer supported with Microsoft Access Driver (*.mdb, *.accdb) installed.
 #'
 #' @param mdb The full path and file name to the Access database.
@@ -16,8 +22,6 @@
 #'
 
 mdb_to_sqlite <- function(mdb, sqlite) {
-
-  # Requires use of 32 bit R and if using RStudo the 32 bit compatible RStudio Desktop (version 1.1.463)
 
   db_connect_string <- paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};","DBQ=", mdb)
 
@@ -32,7 +36,7 @@ mdb_to_sqlite <- function(mdb, sqlite) {
 
   owri.tbls <- owri.tbls[!grepl("MSys", owri.tbls)]
 
-  for(t in owri.tbls){
+  for (t in owri.tbls) {
 
     print(paste0("Writing ",t))
 
