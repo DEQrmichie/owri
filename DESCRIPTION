@@ -1,6 +1,6 @@
 Package: owri
 Title: Query and summarize project data from the OWRI database
-Version: 0.2.3
+Version: 0.3
 Authors@R: c(
     person(given = "Ryan",
            family = "Michie",
@@ -31,4 +31,4 @@ Imports:
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
