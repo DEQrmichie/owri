@@ -30,7 +30,9 @@ owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
   DBI::dbDisconnect(channel)
 
   # Rename some of the Treatment Metrics
-  TreatmentMetricLU2 <- data.frame(TreatmentMetricLUID=c(1:8),
+  # 9 is added by me since there isn't a buffer width treatment metric
+  # to join with the RiparianVtrRcr table
+  TreatmentMetricLU2 <- data.frame(TreatmentMetricLUID=c(1:9),
                                    TreatmentMetric=c("Area treated",
                                                      "Number of treatments",
                                                      "Stream sides treated",
@@ -38,9 +40,11 @@ owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
                                                      "Length of treatment",
                                                      "Percent urban area affected",
                                                      "Percent watershed area affected",
-                                                     "Volumetric flow rate"))
+                                                     "Volumetric flow rate",
+                                                     "Width of riparian treament"))
 
   # Select only some of the riparian treatment metrics
+  # using treatment metric 9 for riparian width, which was added to the treatment metric table
   RiparianVtrRcr2 <- RiparianVtrRcr %>%
     dplyr::select(TreatmentID, mile=LengthMiles, acre=BestAcres, feet=WidthFeet) %>%
     tidyr::gather(-TreatmentID, key="Unit",value="Quantity") %>%
@@ -49,7 +53,7 @@ owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
                                      Unit == "feet" ~ 8),
                   TreatmentMetricLUID=dplyr::case_when(Unit == "mile" ~ 5,
                                                        Unit == "acre" ~ 1,
-                                                       Unit == "feet" ~ 5))
+                                                       Unit == "feet" ~ 9))
 
   df.treatments <- Treatment %>%
     dplyr::select(PROJNUM ,ActivityTypeLUID, ActivityLUID, TreatmentLUID, TreatmentID) %>%
@@ -60,19 +64,16 @@ owri_summary <- function(owri.db, complete.years=NA, huc8=NA) {
     dplyr::left_join(UnitLU, by="UnitLUID") %>%
     dplyr::left_join(ProjectInfo, by="PROJNUM")
 
-if(is.na(complete.years)) {
-  # vector of all years between min and max
-  complete.years <- c(min(df.treatments$CompleteYear):max(df.treatments$CompleteYear))
-}
+  if (!all(is.na(complete.years))) {
+    df.treatments <- df.treatments %>%
+      dplyr::filter(CompleteYear %in% complete.years)
+  }
 
 
-if(is.na(huc8)) {
-  # vector of all huc 8 codes in database
-  huc8 <- unique(df.treatments$drvdHUC4thField)
-}
-
-df.treatments <- df.treatments %>%
-    dplyr::filter(CompleteYear %in% complete.years & drvdHUC4thField %in% huc8)
+  if (!all(is.na(huc8))) {
+    df.treatments <- df.treatments %>%
+      dplyr::filter(drvdHUC4thField %in% huc8)
+  }
 
   #-- Treatment Unit LU table --------------
 
@@ -166,7 +167,7 @@ df.treatments <- df.treatments %>%
 
   #-- Treatment Summary -----
 
-  tbl.rip1 <- df.treatments %>%
+  RiparianVtrRcr3 <- df.treatments %>%
     dplyr::left_join(ATATLU, by=c("ActivityTypeLUID","ActivityType","ActivityLUID","Activity","TreatmentLUID","Treatment")) %>%
     dplyr::select(-Unit,-UnitLUID,-Quantity, -TreatmentMetricLUID) %>%
     dplyr::left_join(RiparianVtrRcr2, by="TreatmentID") %>%
@@ -213,7 +214,7 @@ df.treatments <- df.treatments %>%
                                                                "Voluntary upland tree retention") & TreatmentMetricLUID %in% c(1, 2)) |
                     (ActivityType =="Urban" & TreatmentMetricLUID %in% c(1, 2))
     ) %>%
-    rbind(tbl.rip1) %>%
+    rbind(RiparianVtrRcr3) %>%
     dplyr::mutate(Quantity=ifelse(Unit=="station", Quantity*0.0189394, Quantity), # convert station to miles (1 station = 100 feet = 0.0189394 miles)
                   UnitLUID=ifelse(Unit=="station", as.integer(10), UnitLUID),
                   Unit=ifelse(Unit=="station", "mile", Unit),
