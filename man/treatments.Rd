@@ -4,14 +4,14 @@
 \alias{treatments}
 \title{Return treatments completed for each project.}
 \usage{
-treatments(owri.db, complete.years, huc8)
+treatments(owri.db, complete.years = NA, huc8 = NA)
 }
 \arguments{
 \item{owri.db}{The path and file name of the owri SQLite database.}
 
-\item{complete.years}{Vector of numeric years used to fetch projects. Only projects completed in these years will be summarized.}
+\item{complete.years}{Vector of numeric years used to fetch projects. Only projects completed in these years will be summarized. Default is NA resulting in summary of all years in the database.}
 
-\item{huc8}{Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized.}
+\item{huc8}{Vector of numeric HUC8 codes used to fetch projects. Only projects within the HUC8 will be summarized. Default is NA resulting in summary of all HUC8 codes in the database.}
 }
 \value{
 Dataframe with the quantity treatments implemented for each project.
