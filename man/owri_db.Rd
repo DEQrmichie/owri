@@ -4,14 +4,16 @@
 \alias{owri_db}
 \title{Current OWRI Database}
 \usage{
-owri_db(owri.db = "OWRIDbExport_011023.db")
+owri_db(owri.db = "OwriDbExport_010825.db")
 }
 \arguments{
 \item{owri.db}{Optional. owri SQLite database file name. Default is the
-most recent version. 'OWRIDbExport_011023.db'.}
+most recent version. 'OwriDbExport_010825.db'.}
 }
 \description{
-Returns the path to the most recent SQLite OWRI database export included with this R pacakge.
+Returns the path to the most recent SQLite OWRI database export included with this R package.
+The original OWRI database published by the Oregon Watershed Enhancement Board can be found here:
+https://hub.oregonexplorer.info/pages/water-planning-enhancing-watersheds-in-oregon#TheOWRIDatabaseandGISdata
 }
 \keyword{owri,}
 \keyword{raw_data}
