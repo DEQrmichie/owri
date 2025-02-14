@@ -72,7 +72,7 @@ treatments <- function(owri.db, complete.years=NA, huc8=NA) {
     dplyr::filter(Unit %in% c("mile", "acre"))
 
   df.treatments2 <- df.treatments %>%
-    filter(!TreatmentID %in% unique(RiparianVtrRcr3$TreatmentID)) %>%
+    dplyr::filter(!(TreatmentID %in% unique(RiparianVtrRcr3$TreatmentID))) %>%
     rbind(RiparianVtrRcr3)
 
   if (!all(is.na(complete.years))) {
