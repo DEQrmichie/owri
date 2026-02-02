@@ -5,12 +5,12 @@
 #' https://hub.oregonexplorer.info/pages/water-planning-enhancing-watersheds-in-oregon#TheOWRIDatabaseandGISdata
 #'
 #' @param owri.db Optional. owri SQLite database file name. Default is the
-#'        most recent version. 'OwriDbExport_010825.db'.
+#'        most recent version. 'OwriDbExport_010826.db'.
 #'
 #' @keywords owri, raw_data
 #' @export
 
-owri_db <- function(owri.db = "OwriDbExport_010825.db") {
+owri_db <- function(owri.db = "OwriDbExport_010826.db") {
 
   owri.db <- system.file("extdata", owri.db, package = "owri", mustWork = TRUE)
 
