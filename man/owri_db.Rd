@@ -4,11 +4,11 @@
 \alias{owri_db}
 \title{Current OWRI Database}
 \usage{
-owri_db(owri.db = "OwriDbExport_010825.db")
+owri_db(owri.db = "OwriDbExport_010826.db")
 }
 \arguments{
 \item{owri.db}{Optional. owri SQLite database file name. Default is the
-most recent version. 'OwriDbExport_010825.db'.}
+most recent version. 'OwriDbExport_010826.db'.}
 }
 \description{
 Returns the path to the most recent SQLite OWRI database export included with this R package.
