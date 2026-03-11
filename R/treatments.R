@@ -18,6 +18,7 @@ treatments <- function(owri.db, complete.years=NA, huc8=NA) {
   # I'm keeping the dataframes the same name that OWEB uses
   ActivityLU <- DBI::dbReadTable(channel, "ActivityLU")
   ActivityTypeLU <- DBI::dbReadTable(channel, "ActivityTypeLU")
+  ActivityCost <- DBI::dbReadTable(channel, "ActivityCost")
   ProjectInfo <- DBI::dbReadTable(channel, "ProjectInfo")
   Treatment <- DBI::dbReadTable(channel, "Treatment")
   TreatmentLU <- DBI::dbReadTable(channel, "TreatmentLU")
@@ -49,7 +50,8 @@ treatments <- function(owri.db, complete.years=NA, huc8=NA) {
     dplyr::left_join(TreatmentMetric, by="TreatmentID") %>%
     dplyr::left_join(TreatmentMetricLU2, by="TreatmentMetricLUID") %>%
     dplyr::left_join(UnitLU, by="UnitLUID") %>%
-    dplyr::left_join(ProjectInfo, by="PROJNUM")
+    dplyr::left_join(ProjectInfo, by="PROJNUM") %>%
+    dplyr::left_join(ActivityCost, by=c("PROJNUM", "ProjectID", "ActivityTypeLUID"))
 
   # Pull in the voluntary riparian treatment metrics
   # using treatment metric 9 for riparian width, which was added to the treatment metric table
